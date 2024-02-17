@@ -120,7 +120,7 @@ class AllMeans:
         total_dissimilarity = np.sum(np.triu(distance_matrix, k=1))
         return total_dissimilarity
 
-    def model_topics(self, early_stop = 2, verbose = False):
+    def model_topics(self, early_stop = 2, verbose = False, model = "distilbert-base-nli-stsb-mean-tokens"):
         """
         Models topics from the text using TF-IDF, K-means clustering, and silhouette and Davies-Bouldin scores
         to evaluate clustering performance. Stops modeling when performance worsens for a specified
@@ -129,13 +129,14 @@ class AllMeans:
         Args:
             early_stop (int, optional): The number of iterations of worsening scores before stopping. Default is 2.
             verbose (bool, optional): If True, prints detailed progress information. Default is False.
+            model (str, optional): See HuggingFace SentenceTransformers library for list of models that can be passed here. Default is "distilbert-base-nli-stsb-mean-tokens".
 
         Returns:
             dict: A dictionary mapping identified topics (as strings) to lists of sentences.
         """    
         assert 1 < early_stop, "You must enter an integer greater than 1 for `early_stop`. Please try again."
         self.avg_scores = [] # clearing this in the event of this method being reused without class object being re-constructed
-        model = get_sentence_transformer_model()
+        model = get_sentence_transformer_model(model = model)
         worsening_scores = 0  # Initialize a counter for consecutive worsening scores
 
         for idx, num_clusters in enumerate(range(2, 10)): # 10 starts to take a looooooooong time lol

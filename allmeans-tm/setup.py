@@ -8,7 +8,7 @@ setup(
     packages = find_packages(),
     python_requires = '>=3.11.4',
     install_requires = [
-        'nltk==3.8,1',
+        'nltk==3.8.1',
         'numpy==1.24.3',
         'scikit-learn==1.3.2',
         'sentence-transformers==2.2.2',
