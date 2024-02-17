@@ -4,7 +4,7 @@ Automatic Topic Modelling (TM) using minimal user input and computational resour
 
 See `Basic Modelling` example, below. AllMeans is designed to be simple, user-friendly, and practical. It doesn't invent anything that doesn't already exist in the passed text (it doesn't require loading enormous Word Embeddings models like GloVe). All that is needed is a text, in one string (no pre-processing needed), to create an AllMeans object, and to run the .model_topics() method.
 
-### `.model_topics()` Method
+### Modelling Topics with AllMeans.model_topics()
 
 There are only two arguments to the .model_topics(), `early_stop` and `verbose`. Verbosity is a boolean, offering to print progress and a glimpse of the results as the method runs, and `early_stop` strongly positively correlates with the number of resulting topics found, though it is not a 1:1 relationship (i.e., passing early_stop = 3 will not necessarily result in 3 topics). As the method largely relies on iteratively comparing various Kmeans clustering results (through an averaged silhouette_score and davies_bouldin_score - both of which sklearn's implementations), the early_stop value (default = 2) determines after how many consecutively negatively trending iterations the method stops. The motivation for this being that there is typically a certain Kmeans value that scores best, after which point scores trend downwards, making these iterations often redundant. Thus, a lower early_stop value (\~2) will significantly decrease computational expense and time, but may also change performance. As each early_stop value does not necessarily build on lower values (for example, early_stop = 3 is not necessarily the same topics as early_stop = 2, plus *x* more topics), I suggest trying 2 or 3 values (I like to test something like early_stop = \[2, 3, 4, 5\]) to see how the passed text can be represented.
 
@@ -29,7 +29,7 @@ Note:
 
 -   As a reminder, try different values for `early_stop`. I like to try \[2, 3, 4, 5\], but keep in mind that higher values will result in exponentially larger runtime, and more topics found
 
-### Analysis - Plotting `AllMeans` Results
+### Analysis - Plotting AllMeans.model_topics() Results
 
 This example gets the text from the "Linguistics" Wikipedia, models its topics and plots the distribution of sentences relating to each topic and the mean sentiment (using NLTK's VADER module) of the context relating to each topic.
 

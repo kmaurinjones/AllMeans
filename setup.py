@@ -1,8 +1,11 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r") as f:
+    description = f.read()
+
 setup(
     name = 'allmeans-tm',
-    version = '0.1.0',
+    version = '0.2.0',
     author = 'Kai Maurin-Jones',
     description = 'A package for automatic topic modelling',
     packages = find_packages(),
@@ -13,4 +16,6 @@ setup(
         'scikit-learn==1.3.2',
         'sentence-transformers==2.2.2',
     ],
+    long_description = description,
+    long_description_content_type = "text/markdown",    
 )
