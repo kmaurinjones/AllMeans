@@ -7,7 +7,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score, davies_bouldin_score
 from itertools import product
 from sklearn.metrics.pairwise import cosine_similarity
-from resources import download_nltk_resources, get_sentence_transformer_model
+from .resources import download_nltk_resources, get_sentence_transformer_model
 import warnings
 
 class AllMeans:

@@ -1,15 +1,21 @@
 from setuptools import setup, find_packages
 
+# README
 with open("README.md", "r") as f:
     description = f.read()
 
+# LICENSE
+with open("LICENSE", "r") as f:
+    license = f.read()
+
 setup(
-    name = 'allmeans-tm',
-    version = '0.2.0',
+    name = 'AllMeans',
+    version = '1.0.3',
     author = 'Kai Maurin-Jones',
-    description = 'A package for automatic topic modelling',
+    description = 'A package for fully automatic topic modelling',
     packages = find_packages(),
     python_requires = '>=3.11.4',
+    license = license,
     install_requires = [
         'nltk==3.8.1',
         'numpy==1.24.3',
