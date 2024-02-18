@@ -166,7 +166,6 @@ class AllMeans:
                 if verbose:
                     print("-" * 50)
                     print(f"Early stop triggered. Logged scores: {[round(scr, 4) for scr in self.avg_scores]}") # rounded for readability
-                    # print("-" * 50)
                 break
 
             order_centroids = kmeans.cluster_centers_.argsort()[:, ::-1]
@@ -187,7 +186,6 @@ class AllMeans:
         if best_selection:
             if verbose:
                 print(f"Best selection before assigning clusters: {best_selection}")
-                # print("-" * 50)
             self._assign_clusters_to_sentences(clusters, best_selection, verbose)
 
         return self.clusters
