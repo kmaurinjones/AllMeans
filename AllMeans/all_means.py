@@ -1,3 +1,4 @@
+from jellyfish import jaro_winkler_similarity
 import numpy as np
 import nltk
 from nltk.corpus import names, stopwords, wordnet
@@ -120,14 +121,18 @@ class AllMeans:
         total_dissimilarity = np.sum(np.triu(distance_matrix, k=1))
         return total_dissimilarity
 
-    def model_topics(self, early_stop = 2, verbose = False, model = "distilbert-base-nli-stsb-mean-tokens"):
+    def model_topics(self, early_stop = 2, exclusions: list[str] = [], excl_sim: float = 0.9, verbose = False, model = "distilbert-base-nli-stsb-mean-tokens"):
         """
         Models topics from the text using TF-IDF, K-means clustering, and silhouette and Davies-Bouldin scores
         to evaluate clustering performance. Stops modeling when performance worsens for a specified
-        number of iterations (early stopping).
+        number of iterations (early stopping). Allows excluding specific words from the topics based on
+        a Jaro-Winkler similarity threshold with any words in the exclusions list, while ensuring the intended
+        number of strings in each cluster is maintained after exclusions.
 
         Args:
             early_stop (int, optional): The number of iterations of worsening scores before stopping. Default is 2.
+            exclusions (list[str], optional): List of words to exclude from the topics based on Jaro-Winkler similarity. Default is an empty list.
+            excl_sim (float, optional): Jaro-Winkler Similarity threshold below which a potential cluster topic must be to not be excluded.
             verbose (bool, optional): If True, prints detailed progress information. Default is False.
             model (str, optional): See HuggingFace SentenceTransformers library for list of models that can be passed here. Default is "distilbert-base-nli-stsb-mean-tokens".
 
@@ -135,14 +140,18 @@ class AllMeans:
             dict: A dictionary mapping identified topics (as strings) to lists of sentences.
         """    
         assert 1 < early_stop, "You must enter an integer greater than 1 for `early_stop`. Please try again."
-        self.avg_scores = [] # clearing this in the event of this method being reused without class object being re-constructed
-        model = get_sentence_transformer_model(model = model)
-        worsening_scores = 0  # Initialize a counter for consecutive worsening scores
+        self.avg_scores = []
 
-        for idx, num_clusters in enumerate(range(2, 10)): # 10 starts to take a looooooooong time lol
-            tfidf_vectorizer = TfidfVectorizer(tokenizer = lambda text: self.custom_tokenizer(text), stop_words = 'english', min_df = 1, max_features = 20000)
+        # Process exclusions: lowercase, strip, and remove duplicates
+        exclusions = list(set(word.lower().strip() for word in exclusions))
+
+        model = get_sentence_transformer_model(model=model)
+        worsening_scores = 0
+
+        for idx, num_clusters in enumerate(range(2, 10)):
+            tfidf_vectorizer = TfidfVectorizer(tokenizer=lambda text: self.custom_tokenizer(text), stop_words='english', min_df=1, max_features=20000)
             tfidf_matrix = tfidf_vectorizer.fit_transform(self.documents)
-            kmeans = KMeans(n_clusters = num_clusters, random_state = 42, n_init = "auto")
+            kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init="auto")
             kmeans.fit(tfidf_matrix)
             clusters = kmeans.labels_
             silhouette_avg = silhouette_score(tfidf_matrix, clusters)
@@ -151,26 +160,37 @@ class AllMeans:
             self.avg_scores.append(avg_score)
 
             if len(self.avg_scores) > 1:
-                # Check if the current score is worse than the previous one
                 if avg_score < self.avg_scores[-2]:
                     worsening_scores += 1
                 else:
-                    # Reset if the trend does not continue
                     worsening_scores = 0
 
             if verbose:
                 print(f"Clusters: {num_clusters}. Score: {round(self.avg_scores[idx], 4)}")
 
-            # Break the loop if the early_stop criteria is met
             if worsening_scores >= early_stop:
                 if verbose:
                     print("-" * 50)
-                    print(f"Early stop triggered. Logged scores: {[round(scr, 4) for scr in self.avg_scores]}") # rounded for readability
+                    print(f"Early stop triggered. Logged scores: {[round(scr, 4) for scr in self.avg_scores]}")
                 break
 
             order_centroids = kmeans.cluster_centers_.argsort()[:, ::-1]
             terms = tfidf_vectorizer.get_feature_names_out()
-            my_clusters = [[terms[ind] for ind in order_centroids[i, :5]] for i in range(num_clusters)]
+            initial_cluster_size = 5
+            my_clusters = [[terms[ind] for ind in order_centroids[i, :initial_cluster_size]] for i in range(num_clusters)]
+
+            for cluster_index, cluster in enumerate(my_clusters):
+                filtered_cluster = [term for term in cluster if not any(jaro_winkler_similarity(term, exclusion) > excl_sim for exclusion in exclusions)]
+                term_index = initial_cluster_size
+                while len(filtered_cluster) < initial_cluster_size:
+                    if term_index >= len(terms):
+                        break  # Break if there are no more terms to check
+                    term = terms[order_centroids[cluster_index, term_index]]
+                    term_index += 1
+                    if not any(jaro_winkler_similarity(term, exclusion) > excl_sim for exclusion in exclusions):
+                        filtered_cluster.append(term)
+                my_clusters[cluster_index] = filtered_cluster[:initial_cluster_size]
+
             best_selection = None
             best_score = -np.inf
             unique_words = set(word for cluster in my_clusters for word in cluster)
@@ -182,14 +202,13 @@ class AllMeans:
                     best_score = score
                     best_selection = selection
 
-        # After determining the best selection, assign clusters to sentences
         if best_selection:
             if verbose:
                 print(f"Best selection before assigning clusters: {best_selection}")
             self._assign_clusters_to_sentences(clusters, best_selection, verbose)
 
         return self.clusters
-
+    
     def _assign_clusters_to_sentences(self, clusters, best_selection, verbose):
         """
         Assigns clusters to sentences based on the best selection of words representing each cluster.

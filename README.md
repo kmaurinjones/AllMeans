@@ -12,7 +12,11 @@ Install using: `$ pip install AllMeans`.
 
 ### Modelling Topics with AllMeans.model_topics()
 
-There are only two arguments to the .model_topics(), `early_stop` and `verbose`. Verbosity is a boolean, offering to print progress and a glimpse of the results as the method runs, and `early_stop` strongly positively correlates with the number of resulting topics found, though it is not a 1:1 relationship (i.e., passing early_stop = 3 will not necessarily result in 3 topics). As the method largely relies on iteratively comparing various Kmeans clustering results (through an averaged silhouette_score and davies_bouldin_score - both of which sklearn's implementations), the early_stop value (default = 2) determines after how many consecutively negatively trending iterations the method stops. The motivation for this being that there is typically a certain Kmeans value that scores best, after which point scores trend downwards, making these iterations often redundant. Thus, a lower early_stop value (\~2) will significantly decrease computational expense and time, but may also change performance. As each early_stop value does not necessarily build on lower values (for example, early_stop = 3 is not necessarily the same topics as early_stop = 2, plus *x* more topics), I suggest trying 2 or 3 values (I like to test a range of values for early_stop such as \[2, 3, 4, 5\]) to see how the passed text can be represented.
+There are only two arguments to the .model_topics(), `early_stop` and `verbose`. Verbosity is a boolean, offering to print progress and a glimpse of the results as the method runs, and `early_stop` strongly positively correlates with the number of resulting topics found, though it is not a 1:1 relationship (i.e., passing early_stop = 3 will not necessarily result in 3 topics). As the method largely relies on iteratively comparing various Kmeans clustering results (through an averaged silhouette_score and davies_bouldin_score - both of which, sklearn's implementations), the early_stop value (default = 2) determines after how many consecutively negatively trending iterations the method stops. The motivation for this being that there is typically a certain Kmeans value that scores best, after which point scores trend downwards, making these iterations often redundant. Thus, a lower early_stop value (\~2) will significantly decrease computational expense and time, but may also change performance. As each early_stop value does not necessarily build on lower values (for example, early_stop = 3 is not necessarily the same topics as early_stop = 2, plus *x* more topics), I suggest trying 2 or 3 values (I like to test a range of values for early_stop such as \[2, 3, 4, 5\]) to see how the passed text can be represented.
+
+### Version 1.0.4 - 'exclusions' and 'excl_sim'
+
+In this update, the `exclusions` and `excl_sim` arguments were introduced to the .model_topics() method, allowing the user to pass a list of strings, which excludes any potential cluster labels with a Jaro Winkler Similarity > `excl_sim` value (float between 0 and 1) (using Jellyfish: https://pypi.org/project/jellyfish/) to be excluded from consideration. Suggested usage of the `exclusions` arg is to first pass nothing to it (the arg default is an empty list), and to iteratively and incrementally add more words to the passed list until chosen cluster labels are satisfactory. Suggested value for `excl_sim` is 0.9, but testing different values may prove more beneficial depending on the vocabulary.
 
 ## Examples
 
@@ -33,7 +37,7 @@ clusters = allmeans.model_topics(
 
 Note:
 
--   As a reminder, try different values for `early_stop`. I like to try \[2, 3, 4, 5\], but keep in mind that higher values will result in exponentially larger runtime, and more topics found
+- As a reminder, try different values for `early_stop`. I like to try \[2, 3, 4, 5\], but keep in mind that higher values will result in exponentially larger runtime, and more topics found
 
 ### Plotting AllMeans.model_topics() Results
 
