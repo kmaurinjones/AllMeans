@@ -1,4 +1,12 @@
-from .all_means import AllMeans
-from .resources import download_nltk_resources, get_sentence_transformer_model
+"""AllMeans: Automatic topic discovery with zero LLMs, minimal input."""
 
-__all__ = ['AllMeans', 'download_nltk_resources', 'get_sentence_transformer_model']
+__version__ = "2.0.0"
+
+from .api import TopicModel
+from .core.types import Topic, TopicModelResults
+
+__all__ = [
+    "TopicModel",
+    "Topic",
+    "TopicModelResults",
+]
