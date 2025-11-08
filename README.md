@@ -1,107 +1,296 @@
 # AllMeans
 
-Automatic Topic Modelling (TM) using minimal user input and computational resources. I made this because my biggest issue with most TM modules is simple. If I knew how many topics I wanted, I would already have enough information about the text, such that performing TM would be redundant. AllMeans does not aim to replace existing TM frameworks, but instead aims to tackle the aspect of required user input to derive meaningful insights. With AllMeans, the user is simply required to pass a text, and run one method, with optionally ZERO decisions.
+**Modern topic modeling with minimal user input.** AllMeans v2.0 provides automatic topic discovery using state-of-the-art clustering algorithms, real evaluation metrics, and intelligent keyword extraction with part-of-speech filtering and lemmatization.
 
-See `Basic Modelling` example, below. AllMeans is designed to be simple, user-friendly, and practical. It doesn't invent anything that doesn't already exist in the passed text (it doesn't require loading enormous Word Embeddings models like GloVe). All that is needed is a text (string), in one string (no pre-processing needed), to create an AllMeans object, and to run the .model_topics() method.
+[![PyPI version](https://badge.fury.io/py/allmeans.svg)](https://pypi.org/project/allmeans/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
-Though AllMeans is not itself a single unsupervised algorithm, it relies on unsupervised algorithms to perform topic modelling, which inherently works better with more data. AllMeans was developed with tests on texts from 1,000 to 100,000 characters in length, as it is intended to be flexible, but quality of results will likely typically correlate positively with the size of the passed text.
+## Features
 
-## Usage
+- **Multiple Clustering Algorithms**: K-Means, NMF, LDA, HDBSCAN+UMAP
+- **Automatic K Selection**: Multi-objective optimization finds optimal number of topics
+- **Smart Keyword Extraction**: POS-based filtering removes ordinals, numbers, and uninformative words
+- **Lemmatization**: Normalizes word forms (singular/plural, verb tenses) for better topic quality
+- **Real Evaluation Metrics**: C_V Coherence, Topic Diversity, Silhouette, Davies-Bouldin
+- **Scikit-learn API**: Familiar `fit()`/`transform()` pattern
+- **Verbosity Controls**: Rich progress bars and detailed output options
+- **CLI Interface**: Command-line tool for quick topic modeling
 
-Install using: `$ pip install AllMeans`.
+## Installation
 
-### Modelling Topics with AllMeans.model_topics()
+```bash
+pip install allmeans
+```
 
-There are only two arguments to the .model_topics(), `early_stop` and `verbose`. Verbosity is a boolean, offering to print progress and a glimpse of the results as the method runs, and `early_stop` strongly positively correlates with the number of resulting topics found, though it is not a 1:1 relationship (i.e., passing early_stop = 3 will not necessarily result in 3 topics). As the method largely relies on iteratively comparing various Kmeans clustering results (through an averaged silhouette_score and davies_bouldin_score - both of which, sklearn's implementations), the early_stop value (default = 2) determines after how many consecutively negatively trending iterations the method stops. The motivation for this being that there is typically a certain Kmeans value that scores best, after which point scores trend downwards, making these iterations often redundant. Thus, a lower early_stop value (\~2) will significantly decrease computational expense and time, but may also change performance. As each early_stop value does not necessarily build on lower values (for example, early_stop = 3 is not necessarily the same topics as early_stop = 2, plus *x* more topics), I suggest trying 2 or 3 values (I like to test a range of values for early_stop such as \[2, 3, 4, 5\]) to see how the passed text can be represented.
+Or with `uv`:
+```bash
+uv add allmeans
+```
 
-### Version 1.0.4 - 'exclusions' and 'excl_sim'
+### Optional Dependencies
 
-In this update, the `exclusions` and `excl_sim` arguments were introduced to the .model_topics() method, allowing the user to pass a list of strings, which excludes any potential cluster labels with a Jaro Winkler Similarity > `excl_sim` value (float between 0 and 1) (using Jellyfish: https://pypi.org/project/jellyfish/) to be excluded from consideration. Suggested usage of the `exclusions` arg is to first pass nothing to it (the arg default is an empty list), and to iteratively and incrementally add more words to the passed list until chosen cluster labels are satisfactory. Suggested value for `excl_sim` is 0.9, but testing different values may prove more beneficial depending on the vocabulary.
+```bash
+# Sentiment analysis
+pip install allmeans[sentiment]
 
-## Examples
+# Embeddings support (sentence-transformers, gensim)
+pip install allmeans[embeddings]
 
-### Basic Modelling
+# Visualization tools
+pip install allmeans[viz]
 
-```         
-# !pip install AllMeans
-from AllMeans import AllMeans
+# All extras
+pip install allmeans[all]
+```
 
-# assuming you have a text in the string variable `text`
-allmeans = AllMeans(text = text)
-clusters = allmeans.model_topics(
-    early_stop = 2, # default value
-    verbose = False # default value
+## Quick Start
+
+### Basic Usage
+
+```python
+from AllMeans import TopicModel
+
+# Your text
+text = """
+Machine learning is a subset of artificial intelligence.
+Deep learning uses neural networks with multiple layers.
+Natural language processing helps computers understand human language.
+Computer vision enables machines to interpret visual information.
+"""
+
+# Create and fit model
+model = TopicModel(
+    method="kmeans",           # or "nmf", "lda", "hdbscan"
+    feature_method="tfidf",    # or "bow", "sif"
+    auto_k=True,               # automatically find optimal K
+    k_range=(2, 10),          # range to search
+    verbose=True               # show progress
 )
->>> returns a dict of {str : list[str]} pairs of topics and lists of all sentences relevant to each topic
+
+model.fit(text)
+
+# Get results
+results = model.get_results()
+
+# Print discovered topics
+for topic in results.topics:
+    print(f"\n📌 {topic.label}")
+    print(f"   Keywords: {', '.join(topic.keywords[:5])}")
+    print(f"   Size: {topic.size} sentences")
+    print(f"   Coherence: {topic.coherence:.3f}")
 ```
 
-Note:
+### Working with Documents
 
-- As a reminder, try different values for `early_stop`. I like to try \[2, 3, 4, 5\], but keep in mind that higher values will result in exponentially larger runtime, and more topics found
+```python
+# List of documents instead of single text
+documents = [
+    "Python is a high-level programming language.",
+    "JavaScript is popular for web development.",
+    "Machine learning models require training data.",
+    "Data science combines statistics and programming.",
+]
 
-### Plotting AllMeans.model_topics() Results
+model = TopicModel(n_clusters=2, auto_k=False)
+model.fit(documents)
 
-This example gets the text from the "Linguistics" Wikipedia, models its topics and plots the distribution of sentences relating to each topic and the mean sentiment (using NLTK's VADER module) of the context relating to each topic.
+# Transform new documents
+new_docs = ["Deep learning is a subset of machine learning."]
+assignments = model.transform(new_docs)
+```
 
-```         
-# !pip3 install wikipedia-api
-import wikipediaapi
-wiki_wiki = wikipediaapi.Wikipedia('USER_AGENT_HERE', 'en') # check https://pypi.org/project/Wikipedia-API/ "user_agent" to understand this
-page_py = wiki_wiki.page("Linguistics") # gets the text of entire Wikipedia "Linguistics" page
-text = page_py.text # returns str of entire page text -> check package docs for more useful methods
+### Command-Line Interface
 
-import nltk
-from nltk.sentiment import SentimentIntensityAnalyzer
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
+```bash
+# Fit model on text file
+allmeans fit --input article.txt --method kmeans --verbose
 
-def average_compound_sentiment(texts):
-    sia = SentimentIntensityAnalyzer()
-    compound_scores = [sia.polarity_scores(text)['compound'] for text in texts]
-    avg_score = sum(compound_scores) / len(compound_scores) if compound_scores else 0
-    return avg_score
+# With custom parameters
+allmeans fit \
+    --input data.txt \
+    --output results.json \
+    --method hdbscan \
+    --features tfidf \
+    --clusters 5
 
-# !pip install AllMeans
+# View topics from saved results
+allmeans topics --results results.json
+```
+
+## Advanced Examples
+
+### Wikipedia Article Analysis
+
+```python
+import requests
+from bs4 import BeautifulSoup
+from AllMeans import TopicModel
+
+# Fetch Wikipedia article
+url = "https://en.wikipedia.org/wiki/Roman_Empire"
+response = requests.get(url, headers={
+    "User-Agent": "AllMeans/2.0"
+})
+soup = BeautifulSoup(response.content, 'html.parser')
+content = soup.find('div', {'id': 'mw-content-text'})
+paragraphs = content.find_all('p')
+text = ' '.join([p.get_text() for p in paragraphs if p.get_text().strip()])
+
+# Model topics with auto-K selection
+model = TopicModel(
+    method="kmeans",
+    feature_method="tfidf",
+    auto_k=True,
+    k_range=(3, 8),
+    early_stop=2,
+    random_state=42,
+    verbose=True
+)
+
+model.fit(text)
+results = model.get_results()
+
+# Display results
+print(f"\nDiscovered {len(results.topics)} topics:")
+for topic in results.topics:
+    print(f"\n{topic.label} ({topic.size} sentences)")
+    print(f"Keywords: {', '.join(topic.keywords)}")
+    print(f"Example: {topic.exemplar_sentences[0][:100]}...")
+```
+
+### Custom Exclusions
+
+```python
+# Exclude specific words from keywords
+model = TopicModel(
+    exclusions=["said", "also", "however"],
+    excl_sim=0.9,  # Jaro-Winkler similarity threshold
+    filter_pos=True  # Enable POS filtering
+)
+
+model.fit(text)
+```
+
+### Evaluation Metrics
+
+```python
+results = model.get_results()
+
+print("Evaluation Metrics:")
+print(f"Coherence (C_V): {results.scores['coherence']:.3f}")
+print(f"Diversity: {results.scores['diversity']:.3f}")
+print(f"Silhouette: {results.scores['silhouette']:.3f}")
+print(f"Davies-Bouldin: {results.scores['davies_bouldin']:.3f}")
+```
+
+## API Reference
+
+### TopicModel
+
+```python
+TopicModel(
+    method="kmeans",              # Clustering: "kmeans", "nmf", "lda", "hdbscan"
+    feature_method="tfidf",       # Features: "tfidf", "bow", "sif"
+    n_clusters=None,              # Fixed K (None for auto)
+    auto_k=True,                  # Auto-select K
+    k_range=(2, 10),             # K range to search
+    early_stop=2,                 # Early stopping patience
+    exclusions=None,              # Words to exclude
+    excl_sim=0.9,                # Exclusion similarity threshold
+    filter_pos=True,              # POS-based filtering
+    random_state=42,              # Random seed
+    verbose=False                 # Show progress
+)
+```
+
+**Methods:**
+- `fit(text)` - Fit model on text or documents
+- `transform(text)` - Predict topics for new text
+- `fit_transform(text)` - Fit and transform in one step
+- `get_results()` - Get TopicModelResults object
+
+### TopicModelResults
+
+**Attributes:**
+- `topics` - List of Topic objects
+- `assignments` - Cluster assignments for each sentence
+- `scores` - Dictionary of evaluation metrics
+- `config` - Model configuration
+- `feature_matrix` - TF-IDF or other features
+- `sentences` - Original sentences
+
+### Topic
+
+**Attributes:**
+- `id` - Topic ID
+- `label` - Topic label (top keyword)
+- `keywords` - List of keywords
+- `size` - Number of sentences
+- `coherence` - Topic coherence score
+- `diversity` - Topic diversity score
+- `exemplar_sentences` - Example sentences
+
+## Migration from v1.x
+
+v2.0 is a complete rewrite with breaking changes. See [MIGRATION.md](MIGRATION.md) for detailed migration guide.
+
+**Quick migration:**
+
+```python
+# v1.x (deprecated)
 from AllMeans import AllMeans
-# Use AllMeans to model topics from page
-allmeans = AllMeans(text = text)
-clusters = allmeans.model_topics(early_stop = 5, verbose = True)
-# >>> Note: there will be many printouts here due to verbose = True
+allmeans = AllMeans(text=text)
+clusters = allmeans.model_topics(early_stop=2, verbose=False)
 
-# Prepare the topics-sentences distribution data and mean sentiment per topic
-dist = {lab: len(sents) for lab, sents in clusters.items()}
-sorted_dist = dict(sorted(dist.items(), key = lambda item: item[1], reverse = True))
-avg_sentiments = {key: average_compound_sentiment(value) for key, value in clusters.items()}
-
-# Prepare data for plotting
-labels = list(sorted_dist.keys())
-counts = [dist[label] for label in labels]
-avg_sa = [avg_sentiments[label] for label in labels if label in avg_sentiments]
-
-# Create figure and primary axis
-fig, ax1 = plt.subplots(figsize = (8, 5))
-
-# Plot the topics-sentences distribution
-color = 'tab:blue'
-ax1.set_xlabel('Topics')
-ax1.set_ylabel('Sentences Per Topic')
-ax1.bar(labels, counts, color = color)
-ax1.tick_params(axis = 'y')
-ax1.tick_params(axis = 'x', rotation = 45)
-
-# Create a secondary axis for the average sentiment
-ax2 = ax1.twinx()
-color = 'tab:red'
-ax2.set_ylabel('Average Sentiment')
-ax2.plot(labels, avg_sa, color = color, marker = 'o', linestyle = '-', linewidth = 2, markersize = 5)
-ax2.tick_params(axis = 'y')
-
-# Use integer locator for sentences count axis
-ax1.yaxis.set_major_locator(MaxNLocator(integer = True))
-
-fig.tight_layout()  # Adjust layout to make room for the rotated x-axis labels
-plt.title('Topic-Sentences Distribution and Average Sentiment')
-plt.show()
+# v2.0 (current)
+from AllMeans import TopicModel
+model = TopicModel(early_stop=2, verbose=False)
+model.fit(text)
+results = model.get_results()
 ```
 
-![](example.png){width="637"}
+## Performance
+
+AllMeans v2.0 has been tested on texts ranging from 1,000 to 100,000+ characters. Performance scales with text size:
+
+- **Small texts** (1K-10K chars): < 1 second
+- **Medium texts** (10K-50K chars): 1-5 seconds
+- **Large texts** (50K-100K chars): 5-30 seconds
+
+Auto-K selection adds overhead proportional to `k_range` size. Use `early_stop` to reduce computation time.
+
+## How It Works
+
+1. **Preprocessing**: Text is split into sentences and lemmatized
+2. **Feature Extraction**: TF-IDF, BoW, or SIF embeddings
+3. **Clustering**: K-Means, NMF, LDA, or HDBSCAN groups similar sentences
+4. **Auto-K Selection** (optional): Tests multiple K values, selects optimal via metrics
+5. **Keyword Extraction**: TF-IDF scores filtered by POS tags and lemmatization
+6. **Label Selection**: Most diverse keywords chosen as topic labels
+7. **Evaluation**: Coherence, diversity, and clustering metrics computed
+
+## Contributing
+
+Contributions welcome! Please open an issue or submit a pull request on [GitHub](https://github.com/kmaurinjones/AllMeans).
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Citation
+
+If you use AllMeans in research, please cite:
+
+```bibtex
+@software{allmeans2024,
+  author = {Maurin-Jones, Kai},
+  title = {AllMeans: Modern Topic Modeling with Minimal User Input},
+  year = {2024},
+  url = {https://github.com/kmaurinjones/AllMeans},
+  version = {2.0.0}
+}
+```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and updates.
