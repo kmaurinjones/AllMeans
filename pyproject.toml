@@ -83,6 +83,10 @@ Documentation = "https://github.com/kmaurinjones/AllMeans"
 Repository = "https://github.com/kmaurinjones/AllMeans"
 Issues = "https://github.com/kmaurinjones/AllMeans/issues"
 
+[tool.uv]
+# Pillow 13 fixes the 2026-10 advisories but needs Python 3.11+; 3.10 stays on 12.x.
+constraint-dependencies = ["pillow>=13.0.0; python_version >= '3.11'"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
