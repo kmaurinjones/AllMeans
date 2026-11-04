@@ -136,7 +136,7 @@ def plot_metrics(results, save_path: str = "metrics.png", verbose: bool = True) 
     ax.grid(axis="y", alpha=0.3)
 
     # Add actual values on top of bars
-    for bar, name, value in zip(bars, metric_names, metric_values, strict=False):
+    for bar, _name, value in zip(bars, metric_names, metric_values, strict=False):
         height = bar.get_height()
         ax.text(
             bar.get_x() + bar.get_width() / 2.0,
