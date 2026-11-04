@@ -3,7 +3,7 @@
 **Modern topic modeling with minimal user input.** AllMeans v2.0 provides automatic topic discovery using state-of-the-art clustering algorithms, real evaluation metrics, and intelligent keyword extraction with part-of-speech filtering and lemmatization.
 
 [![PyPI version](https://badge.fury.io/py/allmeans.svg)](https://pypi.org/project/allmeans/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 ## Features
 
