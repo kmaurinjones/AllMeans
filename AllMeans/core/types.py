@@ -78,7 +78,9 @@ class FeatureExtractor(Protocol):
 class ClusteringAlgorithm(Protocol):
     """Protocol for clustering algorithms."""
 
-    def fit(self, X: npt.NDArray[np.float32], n_clusters: int | None = None) -> "ClusteringAlgorithm":
+    def fit(
+        self, X: npt.NDArray[np.float32], n_clusters: int | None = None
+    ) -> "ClusteringAlgorithm":
         """Fit the clustering algorithm."""
         ...
 

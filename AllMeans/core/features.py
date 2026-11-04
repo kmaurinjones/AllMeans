@@ -152,9 +152,7 @@ class SIFEmbedding:
                 word_count[token] = word_count.get(token, 0) + 1
                 total_words += 1
 
-        self.word_freq = {
-            word: count / total_words for word, count in word_count.items()
-        }
+        self.word_freq = {word: count / total_words for word, count in word_count.items()}
 
     def _get_sentence_vector(self, sentence: str) -> npt.NDArray[np.float32]:
         """Get SIF-weighted sentence vector."""

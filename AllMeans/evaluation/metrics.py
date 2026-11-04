@@ -1,6 +1,5 @@
 """Topic model evaluation metrics."""
 
-
 import numpy as np
 import numpy.typing as npt
 from gensim.corpora import Dictionary

@@ -57,5 +57,3 @@ def test_topic_model_auto_k() -> None:
 
     assert model.topics_ is not None
     assert 2 <= len(model.topics_) <= 4
-
-

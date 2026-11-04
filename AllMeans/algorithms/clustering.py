@@ -9,12 +9,14 @@ from sklearn.decomposition import NMF, LatentDirichletAllocation
 
 try:
     import hdbscan
+
     HDBSCAN_AVAILABLE = True
 except ImportError:
     HDBSCAN_AVAILABLE = False
 
 try:
     import umap
+
     UMAP_AVAILABLE = True
 except ImportError:
     UMAP_AVAILABLE = False

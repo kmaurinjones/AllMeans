@@ -201,7 +201,9 @@ class TopicModel:
         k_values = list(range(self.k_range[0], self.k_range[1] + 1))
 
         if self.verbose:
-            console.print(f"[cyan]Auto-K selection:[/cyan] Testing K={self.k_range[0]} to K={self.k_range[1]}")
+            console.print(
+                f"[cyan]Auto-K selection:[/cyan] Testing K={self.k_range[0]} to K={self.k_range[1]}"
+            )
 
             with Progress(
                 SpinnerColumn(),

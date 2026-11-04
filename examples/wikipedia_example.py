@@ -18,44 +18,50 @@ def fetch_wikipedia_text(url: str, verbose: bool = True) -> str:
     response = requests.get(url, headers=headers)
     response.raise_for_status()
 
-    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = BeautifulSoup(response.content, "html.parser")
 
     # Extract main content paragraphs
-    content_div = soup.find('div', {'id': 'mw-content-text'})
-    paragraphs = content_div.find_all('p') if content_div else []
+    content_div = soup.find("div", {"id": "mw-content-text"})
+    paragraphs = content_div.find_all("p") if content_div else []
 
     # Combine paragraph text
-    text = ' '.join([p.get_text() for p in paragraphs if p.get_text().strip()])
+    text = " ".join([p.get_text() for p in paragraphs if p.get_text().strip()])
 
     if verbose:
         print(f"Extracted {len(text)} characters, {len(paragraphs)} paragraphs")
     return text
 
 
-def plot_topic_distribution(results, save_path: str = "topic_distribution.png", verbose: bool = True) -> None:
+def plot_topic_distribution(
+    results, save_path: str = "topic_distribution.png", verbose: bool = True
+) -> None:
     """Plot the size distribution of topics."""
     fig, ax = plt.subplots(figsize=(12, 6))
 
     topic_labels = [f"{t.label[:30]}..." if len(t.label) > 30 else t.label for t in results.topics]
     topic_sizes = [t.size for t in results.topics]
 
-    bars = ax.barh(topic_labels, topic_sizes, color='steelblue', alpha=0.7)
-    ax.set_xlabel('Number of Sentences', fontsize=12)
-    ax.set_ylabel('Topic', fontsize=12)
-    ax.set_title('Topic Distribution - Roman Empire Wikipedia Article', fontsize=14, fontweight='bold')
-    ax.grid(axis='x', alpha=0.3)
+    bars = ax.barh(topic_labels, topic_sizes, color="steelblue", alpha=0.7)
+    ax.set_xlabel("Number of Sentences", fontsize=12)
+    ax.set_ylabel("Topic", fontsize=12)
+    ax.set_title(
+        "Topic Distribution - Roman Empire Wikipedia Article", fontsize=14, fontweight="bold"
+    )
+    ax.grid(axis="x", alpha=0.3)
 
     # Add value labels on bars
-    for i, (bar, size) in enumerate(zip(bars, topic_sizes)):
-        ax.text(size + 0.5, i, str(size), va='center', fontsize=10)
+    for i, (_bar, size) in enumerate(zip(bars, topic_sizes, strict=False)):
+        ax.text(size + 0.5, i, str(size), va="center", fontsize=10)
 
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
     if verbose:
         print(f"✓ Saved: {save_path}")
 
 
-def plot_topic_keywords(results, top_n: int = 5, save_path: str = "topic_keywords.png", verbose: bool = True) -> None:
+def plot_topic_keywords(
+    results, top_n: int = 5, save_path: str = "topic_keywords.png", verbose: bool = True
+) -> None:
     """Plot top keywords for each topic."""
     n_topics = len(results.topics)
     fig, axes = plt.subplots(n_topics, 1, figsize=(14, 3 * n_topics))
@@ -73,19 +79,29 @@ def plot_topic_keywords(results, top_n: int = 5, save_path: str = "topic_keyword
         ax.barh(range(len(keywords)), range(len(keywords), 0, -1), color=colors, alpha=0.7)
         ax.set_yticks(range(len(keywords)))
         ax.set_yticklabels(keywords, fontsize=11)
-        ax.set_xlabel('Importance (Rank)', fontsize=10)
-        ax.set_title(f'Topic {topic.id}: {topic.label}\n({topic.size} sentences, coherence: {topic.coherence:.3f})',
-                     fontsize=12, fontweight='bold')
+        ax.set_xlabel("Importance (Rank)", fontsize=10)
+        ax.set_title(
+            f"Topic {topic.id}: {topic.label}\n({topic.size} sentences, coherence: {topic.coherence:.3f})",
+            fontsize=12,
+            fontweight="bold",
+        )
         ax.invert_yaxis()
         ax.set_xticks([])
 
         # Add keyword labels
-        for i, keyword in enumerate(keywords):
-            ax.text(len(keywords) - i - 0.1, i, f'#{i+1}',
-                   ha='right', va='center', fontweight='bold', fontsize=9)
+        for i, _keyword in enumerate(keywords):
+            ax.text(
+                len(keywords) - i - 0.1,
+                i,
+                f"#{i + 1}",
+                ha="right",
+                va="center",
+                fontweight="bold",
+                fontsize=9,
+            )
 
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
     if verbose:
         print(f"✓ Saved: {save_path}")
 
@@ -102,33 +118,39 @@ def plot_metrics(results, save_path: str = "metrics.png", verbose: bool = True) 
     # Some metrics are better when higher, some when lower
     normalized = []
     colors = []
-    for name, value in zip(metric_names, metric_values):
-        if name in ['davies_bouldin']:  # Lower is better
+    for name, value in zip(metric_names, metric_values, strict=False):
+        if name in ["davies_bouldin"]:  # Lower is better
             # Invert and normalize
             norm_val = max(0, 1 - (value / 3))  # Assuming typical range
-            colors.append('salmon')
+            colors.append("salmon")
         else:  # Higher is better
             norm_val = min(1, max(0, value))
-            colors.append('steelblue')
+            colors.append("steelblue")
         normalized.append(norm_val)
 
-    bars = ax.bar(metric_names, normalized, color=colors, alpha=0.7, edgecolor='black')
-    ax.set_ylabel('Normalized Score (0-1)', fontsize=12)
-    ax.set_xlabel('Metric', fontsize=12)
-    ax.set_title('Topic Model Evaluation Metrics', fontsize=14, fontweight='bold')
+    bars = ax.bar(metric_names, normalized, color=colors, alpha=0.7, edgecolor="black")
+    ax.set_ylabel("Normalized Score (0-1)", fontsize=12)
+    ax.set_xlabel("Metric", fontsize=12)
+    ax.set_title("Topic Model Evaluation Metrics", fontsize=14, fontweight="bold")
     ax.set_ylim(0, 1.1)
-    ax.grid(axis='y', alpha=0.3)
+    ax.grid(axis="y", alpha=0.3)
 
     # Add actual values on top of bars
-    for bar, name, value in zip(bars, metric_names, metric_values):
+    for bar, name, value in zip(bars, metric_names, metric_values, strict=False):
         height = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2., height + 0.02,
-                f'{value:.3f}',
-                ha='center', va='bottom', fontsize=10, fontweight='bold')
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height + 0.02,
+            f"{value:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            fontweight="bold",
+        )
 
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
     if verbose:
         print(f"✓ Saved: {save_path}")
 
@@ -138,12 +160,17 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="Topic modeling on Wikipedia article")
-    parser.add_argument("--url", default="https://en.wikipedia.org/wiki/Roman_Empire",
-                        help="Wikipedia URL to analyze")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                        help="Show detailed progress and output")
-    parser.add_argument("--quiet", "-q", action="store_true",
-                        help="Suppress all output except errors")
+    parser.add_argument(
+        "--url",
+        default="https://en.wikipedia.org/wiki/Roman_Empire",
+        help="Wikipedia URL to analyze",
+    )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Show detailed progress and output"
+    )
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress all output except errors"
+    )
     args = parser.parse_args()
 
     # Validate flags
@@ -157,9 +184,9 @@ def main() -> None:
     text = fetch_wikipedia_text(args.url, verbose=verbose)
 
     if verbose:
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("TOPIC MODELING: Wikipedia Article")
-        print("="*70)
+        print("=" * 70)
 
     # Create and fit model
     model = TopicModel(
@@ -177,9 +204,9 @@ def main() -> None:
 
     # Display results
     if verbose:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"DISCOVERED {len(results.topics)} TOPICS")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
         for topic in results.topics:
             print(f"📌 Topic {topic.id}: {topic.label}")
@@ -193,17 +220,17 @@ def main() -> None:
             print()
 
         # Display metrics
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print("EVALUATION METRICS")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         for metric, value in results.scores.items():
             print(f"  {metric:20s}: {value:.4f}")
         print()
 
         # Create visualizations
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print("GENERATING VISUALIZATIONS")
-        print(f"{'='*70}\n")
+        print(f"{'=' * 70}\n")
 
     # Generate plots
     plot_topic_distribution(results, "roman_empire_topic_distribution.png", verbose=verbose)
@@ -211,9 +238,9 @@ def main() -> None:
     plot_metrics(results, "roman_empire_metrics.png", verbose=verbose)
 
     if verbose:
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print("✅ COMPLETE")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
         print("\nGenerated files:")
         print("  - roman_empire_topic_distribution.png")
         print("  - roman_empire_keywords.png")

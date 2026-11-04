@@ -51,19 +51,19 @@ class TopicLabeler:
         # Default to meaningful POS tags: nouns, verbs, adjectives
         if allowed_pos is None:
             self.allowed_pos = {
-                "NN",    # Noun, singular
-                "NNS",   # Noun, plural
-                "NNP",   # Proper noun, singular
+                "NN",  # Noun, singular
+                "NNS",  # Noun, plural
+                "NNP",  # Proper noun, singular
                 "NNPS",  # Proper noun, plural
-                "VB",    # Verb, base form
-                "VBD",   # Verb, past tense
-                "VBG",   # Verb, gerund/present participle
-                "VBN",   # Verb, past participle
-                "VBP",   # Verb, non-3rd person singular present
-                "VBZ",   # Verb, 3rd person singular present
-                "JJ",    # Adjective
-                "JJR",   # Adjective, comparative
-                "JJS",   # Adjective, superlative
+                "VB",  # Verb, base form
+                "VBD",  # Verb, past tense
+                "VBG",  # Verb, gerund/present participle
+                "VBN",  # Verb, past participle
+                "VBP",  # Verb, non-3rd person singular present
+                "VBZ",  # Verb, 3rd person singular present
+                "JJ",  # Adjective
+                "JJR",  # Adjective, comparative
+                "JJS",  # Adjective, superlative
             }
         else:
             self.allowed_pos = allowed_pos
@@ -74,12 +74,37 @@ class TopicLabeler:
 
         # Ordinal numbers
         ordinals = {
-            "first", "second", "third", "fourth", "fifth", "sixth", "seventh",
-            "eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth",
-            "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth",
-            "nineteenth", "twentieth", "thirtieth", "fortieth", "fiftieth",
-            "sixtieth", "seventieth", "eightieth", "ninetieth", "hundredth",
-            "thousandth", "millionth", "billionth"
+            "first",
+            "second",
+            "third",
+            "fourth",
+            "fifth",
+            "sixth",
+            "seventh",
+            "eighth",
+            "ninth",
+            "tenth",
+            "eleventh",
+            "twelfth",
+            "thirteenth",
+            "fourteenth",
+            "fifteenth",
+            "sixteenth",
+            "seventeenth",
+            "eighteenth",
+            "nineteenth",
+            "twentieth",
+            "thirtieth",
+            "fortieth",
+            "fiftieth",
+            "sixtieth",
+            "seventieth",
+            "eightieth",
+            "ninetieth",
+            "hundredth",
+            "thousandth",
+            "millionth",
+            "billionth",
         }
 
         if word_lower in ordinals:
@@ -95,9 +120,30 @@ class TopicLabeler:
 
         # Common uninformative words that slip through stopwords
         uninformative = {
-            "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
-            "many", "much", "several", "various", "different", "certain", "particular",
-            "also", "however", "therefore", "thus", "moreover", "furthermore", "nevertheless"
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+            "six",
+            "seven",
+            "eight",
+            "nine",
+            "ten",
+            "many",
+            "much",
+            "several",
+            "various",
+            "different",
+            "certain",
+            "particular",
+            "also",
+            "however",
+            "therefore",
+            "thus",
+            "moreover",
+            "furthermore",
+            "nevertheless",
         }
 
         return word_lower in uninformative
@@ -112,7 +158,8 @@ class TopicLabeler:
 
         # Filter by allowed POS tags and uninformative words
         filtered = [
-            word for word, pos in tagged
+            word
+            for word, pos in tagged
             if pos in self.allowed_pos and not self._is_uninformative(word)
         ]
 
@@ -203,7 +250,7 @@ class TopicLabeler:
             Tuple of selected keywords (one per cluster)
         """
         if not cluster_keywords:
-            return tuple()
+            return ()
 
         if not self.max_diversity or embeddings is None:
             # Just take first keyword from each cluster

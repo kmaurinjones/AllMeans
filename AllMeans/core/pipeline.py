@@ -128,8 +128,7 @@ class NLTKTokenizer:
         # Lemmatization
         if self.lemmatize:
             tokens = [
-                self.lemmatizer.lemmatize(word, self._get_wordnet_pos(tag))
-                for word, tag in tagged
+                self.lemmatizer.lemmatize(word, self._get_wordnet_pos(tag)) for word, tag in tagged
             ]
         else:
             tokens = [word for word, _ in tagged]
