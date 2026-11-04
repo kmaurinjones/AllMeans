@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Automatic topic discovery with zero LLMs, minimal input"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { file="LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -18,7 +18,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -83,13 +82,9 @@ Documentation = "https://github.com/kmaurinjones/AllMeans"
 Repository = "https://github.com/kmaurinjones/AllMeans"
 Issues = "https://github.com/kmaurinjones/AllMeans/issues"
 
-[tool.uv]
-# Pillow 13 fixes the 2026-10 advisories but needs Python 3.11+; 3.10 stays on 12.x.
-constraint-dependencies = ["pillow>=13.0.0; python_version >= '3.11'"]
-
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -110,7 +105,7 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -143,3 +138,6 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["AllMeans"]
